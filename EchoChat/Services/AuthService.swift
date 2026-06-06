@@ -7,6 +7,7 @@
 
 import Foundation
 import FirebaseAuth
+import FirebaseFirestore
 
 @Observable
 final class AuthService {
@@ -31,6 +32,14 @@ final class AuthService {
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
             self.user = result.user
+            
+            let newUser = User(
+                id: result.user.uid,
+                fullName: fullName,
+                email: email,
+                profileImageUrl: nil
+            )
+            try Firestore.firestore().collection("users").document(newUser.id).setData(from: newUser)
         } catch {
             self.errorMessage = error.localizedDescription
         }
