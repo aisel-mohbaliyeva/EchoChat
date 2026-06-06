@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var viewModel = AuthViewModel()
+    @State private var authViewModel = AuthViewModel()
+    @State private var chatViewModel = ChatViewModel()
     
     var body: some View {
-        if viewModel.isLoggedIn {
-            Text("Xoş gəldin! 🎉")
+        if authViewModel.isLoggedIn {
+            ChatListView(chatViewModel: chatViewModel, authViewModel: authViewModel)
         } else {
-            LoginView(viewModel: viewModel)
+            LoginView(viewModel: authViewModel)
         }
     }
 }
