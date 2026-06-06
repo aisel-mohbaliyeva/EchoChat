@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseAuth
 
 struct Message: Identifiable, Codable {
     var id: String
@@ -8,10 +9,10 @@ struct Message: Identifiable, Codable {
     var timestamp: Date
     
     var isFromCurrentUser: Bool {
-        senderId == currentUserId
+        senderId == Auth.auth().currentUser?.uid
     }
     
-    private var currentUserId: String {
-        UserDefaults.standard.string(forKey: "currentUserId") ?? ""
+    enum CodingKeys: String, CodingKey {
+        case id, senderId, receiverId, text, timestamp
     }
 }
