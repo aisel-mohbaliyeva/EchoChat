@@ -8,15 +8,13 @@
 import SwiftUI
 
 struct LoginView: View {
-    @State private var email = ""
-    @State private var password = ""
+    @Bindable var viewModel: AuthViewModel
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 32) {
                 Spacer()
                 
-                // App logo və adı
                 VStack(spacing: 8) {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
                         .font(.system(size: 60))
@@ -27,41 +25,51 @@ struct LoginView: View {
                         .fontWeight(.bold)
                 }
                 
-                // Input sahələri
+                if !viewModel.errorMessage.isEmpty {
+                    Text(viewModel.errorMessage)
+                        .foregroundStyle(.red)
+                        .font(.caption)
+                }
+                
                 VStack(spacing: 16) {
-                    TextField("Email", text: $email)
+                    TextField("Email", text: $viewModel.email)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                     
-                    SecureField("Şifrə", text: $password)
+                    SecureField("Şifrə", text: $viewModel.password)
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                 }
                 .padding(.horizontal)
                 
-                // Login düyməsi
                 Button {
-                    // TODO: Firebase login
+                    Task { await viewModel.signIn() }
                 } label: {
-                    Text("Daxil ol")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(.blue)
-                        .foregroundStyle(.white)
-                        .cornerRadius(12)
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    } else {
+                        Text("Daxil ol")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    }
                 }
+                .background(.blue)
+                .foregroundStyle(.white)
+                .cornerRadius(12)
                 .padding(.horizontal)
+                .disabled(viewModel.isLoading)
                 
                 Spacer()
                 
-                // Register-ə keçid
                 NavigationLink {
-                    RegisterView()
+                    RegisterView(viewModel: viewModel)
                 } label: {
                     HStack(spacing: 4) {
                         Text("Hesabın yoxdur?")
@@ -79,5 +87,5 @@ struct LoginView: View {
 }
 
 #Preview {
-    LoginView()
+    LoginView(viewModel: AuthViewModel())
 }

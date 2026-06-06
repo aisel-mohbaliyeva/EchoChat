@@ -8,17 +8,13 @@
 import SwiftUI
 
 struct RegisterView: View {
-    @State private var fullName = ""
-    @State private var email = ""
-    @State private var password = ""
-    @State private var confirmPassword = ""
+    @Bindable var viewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Başlıq
             VStack(spacing: 8) {
                 Image(systemName: "person.badge.plus")
                     .font(.system(size: 60))
@@ -29,49 +25,59 @@ struct RegisterView: View {
                     .fontWeight(.bold)
             }
             
-            // Input sahələri
+            if !viewModel.errorMessage.isEmpty {
+                Text(viewModel.errorMessage)
+                    .foregroundStyle(.red)
+                    .font(.caption)
+            }
+            
             VStack(spacing: 16) {
-                TextField("Ad və Soyad", text: $fullName)
+                TextField("Ad və Soyad", text: $viewModel.fullName)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                 
-                TextField("Email", text: $email)
+                TextField("Email", text: $viewModel.email)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.emailAddress)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                 
-                SecureField("Şifrə", text: $password)
+                SecureField("Şifrə", text: $viewModel.password)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                 
-                SecureField("Şifrəni təsdiqlə", text: $confirmPassword)
+                SecureField("Şifrəni təsdiqlə", text: $viewModel.confirmPassword)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
             }
             .padding(.horizontal)
             
-            // Register düyməsi
             Button {
-                // TODO: Firebase register
+                Task { await viewModel.register() }
             } label: {
-                Text("Qeydiyyatdan keç")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(.blue)
-                    .foregroundStyle(.white)
-                    .cornerRadius(12)
+                if viewModel.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else {
+                    Text("Qeydiyyatdan keç")
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                }
             }
+            .background(.blue)
+            .foregroundStyle(.white)
+            .cornerRadius(12)
             .padding(.horizontal)
+            .disabled(viewModel.isLoading)
             
             Spacer()
             
-            // Login-ə qayıtma
             Button {
                 dismiss()
             } label: {
@@ -91,6 +97,6 @@ struct RegisterView: View {
 
 #Preview {
     NavigationStack {
-        RegisterView()
+        RegisterView(viewModel: AuthViewModel())
     }
 }
