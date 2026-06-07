@@ -12,86 +12,114 @@ struct RegisterView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.1, green: 0.1, blue: 0.2), Color(red: 0.05, green: 0.05, blue: 0.15)],
+                startPoint: .top, endPoint: .bottom
+            )
+            .ignoresSafeArea()
             
-            VStack(spacing: 8) {
-                Image(systemName: "person.badge.plus")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.blue)
+            VStack(spacing: 32) {
+                Spacer()
                 
-                Text("Hesab yarat")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-            }
-            
-            if !viewModel.errorMessage.isEmpty {
-                Text(viewModel.errorMessage)
-                    .foregroundStyle(.red)
-                    .font(.caption)
-            }
-            
-            VStack(spacing: 16) {
-                TextField("Ad və Soyad", text: $viewModel.fullName)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                VStack(spacing: 12) {
+                    Image(systemName: "person.badge.plus")
+                        .font(.system(size: 60))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.cyan, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                    
+                    Text("Hesab yarat")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
                 
-                TextField("Email", text: $viewModel.email)
-                    .textInputAutocapitalization(.never)
-                    .keyboardType(.emailAddress)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                if !viewModel.errorMessage.isEmpty {
+                    Text(viewModel.errorMessage)
+                        .foregroundStyle(.red)
+                        .font(.caption)
+                }
                 
-                SecureField("Şifrə", text: $viewModel.password)
+                VStack(spacing: 14) {
+                    HStack {
+                        Image(systemName: "person").foregroundStyle(.gray)
+                        TextField("Ad və Soyad", text: $viewModel.fullName)
+                    }
                     .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    .background(.white.opacity(0.1))
+                    .cornerRadius(14)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.15)))
+                    
+                    HStack {
+                        Image(systemName: "envelope").foregroundStyle(.gray)
+                        TextField("Email", text: $viewModel.email)
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.emailAddress)
+                    }
+                    .padding()
+                    .background(.white.opacity(0.1))
+                    .cornerRadius(14)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.15)))
+                    
+                    HStack {
+                        Image(systemName: "lock").foregroundStyle(.gray)
+                        SecureField("Şifrə", text: $viewModel.password)
+                    }
+                    .padding()
+                    .background(.white.opacity(0.1))
+                    .cornerRadius(14)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.15)))
+                    
+                    HStack {
+                        Image(systemName: "lock.fill").foregroundStyle(.gray)
+                        SecureField("Şifrəni təsdiqlə", text: $viewModel.confirmPassword)
+                    }
+                    .padding()
+                    .background(.white.opacity(0.1))
+                    .cornerRadius(14)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.15)))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal)
                 
-                SecureField("Şifrəni təsdiqlə", text: $viewModel.confirmPassword)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-            }
-            .padding(.horizontal)
-            
-            Button {
-                Task { await viewModel.register() }
-            } label: {
-                if viewModel.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                } else {
-                    Text("Qeydiyyatdan keç")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
+                Button {
+                    Task { await viewModel.register() }
+                } label: {
+                    if viewModel.isLoading {
+                        ProgressView().tint(.white)
+                            .frame(maxWidth: .infinity).padding()
+                    } else {
+                        Text("Qeydiyyatdan keç")
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity).padding()
+                    }
+                }
+                .background(
+                    LinearGradient(colors: [.cyan, .blue], startPoint: .leading, endPoint: .trailing)
+                )
+                .foregroundStyle(.white)
+                .cornerRadius(14)
+                .padding(.horizontal)
+                .disabled(viewModel.isLoading)
+                
+                Spacer()
+                
+                Button {
+                    dismiss()
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("Artıq hesabın var?")
+                            .foregroundStyle(.gray)
+                        Text("Daxil ol")
+                            .foregroundStyle(.cyan)
+                            .fontWeight(.semibold)
+                    }
+                    .font(.footnote)
                 }
             }
-            .background(.blue)
-            .foregroundStyle(.white)
-            .cornerRadius(12)
-            .padding(.horizontal)
-            .disabled(viewModel.isLoading)
-            
-            Spacer()
-            
-            Button {
-                dismiss()
-            } label: {
-                HStack(spacing: 4) {
-                    Text("Artıq hesabın var?")
-                        .foregroundStyle(.gray)
-                    Text("Daxil ol")
-                        .foregroundStyle(.blue)
-                        .fontWeight(.semibold)
-                }
-                .font(.footnote)
-            }
+            .padding(.vertical)
         }
-        .padding(.vertical)
+        .navigationBarBackButtonHidden(true)
     }
 }
 
