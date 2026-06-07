@@ -7,9 +7,11 @@
 
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
 
 @main
 struct EchoChatApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     
     init() {
         FirebaseApp.configure()
@@ -18,6 +20,20 @@ struct EchoChatApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard Auth.auth().currentUser != nil else { return }
+            let userService = UserService()
+            Task {
+                switch newPhase {
+                case .active:
+                    await userService.setOnlineStatus(true)
+                case .inactive, .background:
+                    await userService.setOnlineStatus(false)
+                @unknown default:
+                    break
+                }
+            }
         }
     }
 }

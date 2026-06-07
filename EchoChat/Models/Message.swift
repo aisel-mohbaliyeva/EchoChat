@@ -7,12 +7,17 @@ struct Message: Identifiable, Codable {
     var receiverId: String
     var text: String
     var timestamp: Date
+    var imageUrl: String?
     
     var isFromCurrentUser: Bool {
         senderId == Auth.auth().currentUser?.uid
     }
     
+    var isImageMessage: Bool {
+        imageUrl != nil
+    }
+    
     enum CodingKeys: String, CodingKey {
-        case id, senderId, receiverId, text, timestamp
+        case id, senderId, receiverId, text, timestamp, imageUrl
     }
 }

@@ -5,4 +5,6 @@ struct User: Identifiable, Codable {
     var fullName: String
     var email: String
     var profileImageUrl: String?
+    var isOnline: Bool?
+    var lastSeen: Date?
 }
