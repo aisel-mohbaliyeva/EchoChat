@@ -9,7 +9,7 @@ final class ChatService {
         Auth.auth().currentUser?.uid ?? ""
     }
     
-    func sendMessage(to receiverId: String, text: String) async throws {
+    func sendMessage(to receiverId: String, text: String, imageUrl: String? = nil) async throws {
         let chatId = makeChatId(userId1: currentUserId, userId2: receiverId)
         
         let message = Message(
@@ -17,7 +17,8 @@ final class ChatService {
             senderId: currentUserId,
             receiverId: receiverId,
             text: text,
-            timestamp: Date()
+            timestamp: Date(),
+            imageUrl: imageUrl
         )
         
         try db.collection("chats").document(chatId)
@@ -27,7 +28,7 @@ final class ChatService {
         let chatData: [String: Any] = [
             "id": chatId,
             "participants": [currentUserId, receiverId],
-            "lastMessage": text,
+            "lastMessage": imageUrl != nil ? "📷 Şəkil" : text,
             "lastMessageTimestamp": Timestamp(date: Date())
         ]
         try await db.collection("chats").document(chatId).setData(chatData, merge: true)

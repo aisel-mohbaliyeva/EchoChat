@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct ChatView: View {
     @Bindable var viewModel: ChatViewModel
@@ -27,20 +28,30 @@ struct ChatView: View {
             
             Divider()
             
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                PhotosPicker(selection: $viewModel.selectedPhoto, matching: .images) {
+                    Image(systemName: "photo")
+                        .foregroundStyle(.blue)
+                        .font(.title3)
+                }
+                
                 TextField("Mesaj yaz...", text: $viewModel.messageText)
                     .padding(10)
                     .background(Color(.systemGray6))
                     .cornerRadius(20)
                 
-                Button {
-                    Task { await viewModel.sendMessage(to: receiver.id) }
-                } label: {
-                    Image(systemName: "paperplane.fill")
-                        .foregroundStyle(.blue)
-                        .font(.title3)
+                if viewModel.isSendingImage {
+                    ProgressView()
+                } else {
+                    Button {
+                        Task { await viewModel.sendMessage(to: receiver.id) }
+                    } label: {
+                        Image(systemName: "paperplane.fill")
+                            .foregroundStyle(.blue)
+                            .font(.title3)
+                    }
+                    .disabled(viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
-                .disabled(viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding()
         }
@@ -52,6 +63,9 @@ struct ChatView: View {
         .onDisappear {
             viewModel.stopListening()
         }
+        .onChange(of: viewModel.selectedPhoto) {
+            Task { await viewModel.sendImage(to: receiver.id) }
+        }
     }
 }
 
@@ -62,11 +76,25 @@ struct MessageBubble: View {
         HStack {
             if message.isFromCurrentUser { Spacer() }
             
-            Text(message.text)
-                .padding(12)
-                .background(message.isFromCurrentUser ? Color.blue : Color(.systemGray5))
-                .foregroundStyle(message.isFromCurrentUser ? .white : .primary)
-                .cornerRadius(16)
+            if message.isImageMessage, let urlString = message.imageUrl,
+               let url = URL(string: urlString) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: 200, maxHeight: 200)
+                        .cornerRadius(16)
+                } placeholder: {
+                    ProgressView()
+                        .frame(width: 200, height: 150)
+                }
+            } else {
+                Text(message.text)
+                    .padding(12)
+                    .background(message.isFromCurrentUser ? Color.blue : Color(.systemGray5))
+                    .foregroundStyle(message.isFromCurrentUser ? .white : .primary)
+                    .cornerRadius(16)
+            }
             
             if !message.isFromCurrentUser { Spacer() }
         }

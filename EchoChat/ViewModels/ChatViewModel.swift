@@ -1,11 +1,14 @@
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
+import PhotosUI
+import SwiftUI
 
 @Observable
 final class ChatViewModel {
     private let chatService = ChatService()
     private let userService = UserService()
+    private let imageService = ImageService()
     private var messagesListener: ListenerRegistration?
     private var chatsListener: ListenerRegistration?
     
@@ -13,6 +16,8 @@ final class ChatViewModel {
     var chats: [Chat] = []
     var users: [User] = []
     var messageText = ""
+    var selectedPhoto: PhotosPickerItem?
+    var isSendingImage = false
     
     var currentUserId: String {
         Auth.auth().currentUser?.uid ?? ""
@@ -50,6 +55,20 @@ final class ChatViewModel {
         } catch {
             print("Failed to send message: \(error)")
         }
+    }
+    
+    func sendImage(to receiverId: String) async {
+        guard let data = await imageService.loadImage(from: selectedPhoto) else { return }
+        selectedPhoto = nil
+        isSendingImage = true
+        do {
+            let path = "chat_images/\(UUID().uuidString).jpg"
+            let url = try await imageService.uploadImage(data, path: path)
+            try await chatService.sendMessage(to: receiverId, text: "", imageUrl: url)
+        } catch {
+            print("Failed to send image: \(error)")
+        }
+        isSendingImage = false
     }
     
     func stopListening() {
