@@ -59,16 +59,5 @@ EchoChat/
         └── ProfileView.swift
 ```
 
-## Requirements
 
-- iOS 17.0+
-- Xcode 15.0+
-- Firebase project with Auth and Firestore enabled
 
-## Setup
-
-1. Clone the repository
-2. Add your `GoogleService-Info.plist` from Firebase Console
-3. Enable Email/Password authentication in Firebase
-4. Create Cloud Firestore database in Firebase Console
-5. Build and run in Xcode
