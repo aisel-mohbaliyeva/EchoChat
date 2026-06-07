@@ -15,12 +15,23 @@ final class ChatViewModel {
     var messages: [Message] = []
     var chats: [Chat] = []
     var users: [User] = []
+    var allUsers: [User] = []
     var messageText = ""
     var selectedPhoto: PhotosPickerItem?
     var isSendingImage = false
+    var isReceiverTyping = false
+    var searchText = ""
+    private var typingListener: ListenerRegistration?
     
     var currentUserId: String {
         Auth.auth().currentUser?.uid ?? ""
+    }
+    
+    var filteredUsers: [User] {
+        if searchText.isEmpty {
+            return users
+        }
+        return users.filter { $0.fullName.localizedCaseInsensitiveContains(searchText) }
     }
     
     func fetchUsers() async {
@@ -71,8 +82,27 @@ final class ChatViewModel {
         isSendingImage = false
     }
     
+    func setTyping(_ isTyping: Bool, receiverId: String) {
+        let chatId = chatService.makeChatId(userId1: currentUserId, userId2: receiverId)
+        Task { await chatService.setTypingStatus(isTyping, chatId: chatId) }
+    }
+    
+    func listenToTyping(receiverId: String) {
+        let chatId = chatService.makeChatId(userId1: currentUserId, userId2: receiverId)
+        typingListener?.remove()
+        typingListener = chatService.listenToTyping(chatId: chatId) { [weak self] typingUserId in
+            self?.isReceiverTyping = typingUserId == receiverId
+        }
+    }
+    
+    func markAsRead(receiverId: String) {
+        let chatId = chatService.makeChatId(userId1: currentUserId, userId2: receiverId)
+        Task { await chatService.markMessagesAsRead(chatId: chatId, receiverId: receiverId) }
+    }
+    
     func stopListening() {
         messagesListener?.remove()
         chatsListener?.remove()
+        typingListener?.remove()
     }
 }

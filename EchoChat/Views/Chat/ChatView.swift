@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotosUI
 
 struct ChatView: View {
     @Bindable var viewModel: ChatViewModel
@@ -26,32 +25,35 @@ struct ChatView: View {
                 }
             }
             
+            if viewModel.isReceiverTyping {
+                HStack {
+                    Text("\(receiver.fullName) yazır...")
+                        .font(.caption)
+                        .foregroundStyle(.gray)
+                        .padding(.horizontal)
+                    Spacer()
+                }
+            }
+            
             Divider()
             
-            HStack(spacing: 8) {
-                PhotosPicker(selection: $viewModel.selectedPhoto, matching: .images) {
-                    Image(systemName: "photo")
-                        .foregroundStyle(.blue)
-                        .font(.title3)
-                }
-                
+            HStack(spacing: 12) {
                 TextField("Mesaj yaz...", text: $viewModel.messageText)
                     .padding(10)
                     .background(Color(.systemGray6))
                     .cornerRadius(20)
-                
-                if viewModel.isSendingImage {
-                    ProgressView()
-                } else {
-                    Button {
-                        Task { await viewModel.sendMessage(to: receiver.id) }
-                    } label: {
-                        Image(systemName: "paperplane.fill")
-                            .foregroundStyle(.blue)
-                            .font(.title3)
+                    .onChange(of: viewModel.messageText) {
+                        viewModel.setTyping(!viewModel.messageText.isEmpty, receiverId: receiver.id)
                     }
-                    .disabled(viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                
+                Button {
+                    Task { await viewModel.sendMessage(to: receiver.id) }
+                } label: {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundStyle(.blue)
+                        .font(.title3)
                 }
+                .disabled(viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding()
         }
@@ -59,13 +61,17 @@ struct ChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.listenToMessages(receiverId: receiver.id)
+            viewModel.listenToTyping(receiverId: receiver.id)
+            viewModel.markAsRead(receiverId: receiver.id)
         }
         .onDisappear {
+            viewModel.setTyping(false, receiverId: receiver.id)
             viewModel.stopListening()
         }
-        .onChange(of: viewModel.selectedPhoto) {
-            Task { await viewModel.sendImage(to: receiver.id) }
+        .onChange(of: viewModel.messages.count) {
+            viewModel.markAsRead(receiverId: receiver.id)
         }
+
     }
 }
 
@@ -89,11 +95,19 @@ struct MessageBubble: View {
                         .frame(width: 200, height: 150)
                 }
             } else {
-                Text(message.text)
-                    .padding(12)
-                    .background(message.isFromCurrentUser ? Color.blue : Color(.systemGray5))
-                    .foregroundStyle(message.isFromCurrentUser ? .white : .primary)
-                    .cornerRadius(16)
+                VStack(alignment: message.isFromCurrentUser ? .trailing : .leading, spacing: 2) {
+                    Text(message.text)
+                        .padding(12)
+                        .background(message.isFromCurrentUser ? Color.blue : Color(.systemGray5))
+                        .foregroundStyle(message.isFromCurrentUser ? .white : .primary)
+                        .cornerRadius(16)
+                    
+                    if message.isFromCurrentUser {
+                        Text(message.isRead == true ? "Görüldü ✓✓" : "✓")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.gray)
+                    }
+                }
             }
             
             if !message.isFromCurrentUser { Spacer() }

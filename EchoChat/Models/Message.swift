@@ -8,6 +8,7 @@ struct Message: Identifiable, Codable {
     var text: String
     var timestamp: Date
     var imageUrl: String?
+    var isRead: Bool?
     
     var isFromCurrentUser: Bool {
         senderId == Auth.auth().currentUser?.uid
@@ -18,6 +19,6 @@ struct Message: Identifiable, Codable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, senderId, receiverId, text, timestamp, imageUrl
+        case id, senderId, receiverId, text, timestamp, imageUrl, isRead
     }
 }

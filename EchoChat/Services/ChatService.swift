@@ -57,6 +57,32 @@ final class ChatService {
             }
     }
     
+    func setTypingStatus(_ isTyping: Bool, chatId: String) async {
+        try? await db.collection("chats").document(chatId).updateData([
+            "typingUserId": isTyping ? currentUserId : ""
+        ])
+    }
+    
+    func listenToTyping(chatId: String, completion: @escaping (String) -> Void) -> ListenerRegistration {
+        db.collection("chats").document(chatId)
+            .addSnapshotListener { snapshot, _ in
+                let typingUserId = snapshot?.data()?["typingUserId"] as? String ?? ""
+                completion(typingUserId)
+            }
+    }
+    
+    func markMessagesAsRead(chatId: String, receiverId: String) async {
+        let snapshot = try? await db.collection("chats").document(chatId)
+            .collection("messages")
+            .whereField("senderId", isEqualTo: receiverId)
+            .whereField("isRead", isEqualTo: false)
+            .getDocuments()
+        
+        for doc in snapshot?.documents ?? [] {
+            try? await doc.reference.updateData(["isRead": true])
+        }
+    }
+    
     func makeChatId(userId1: String, userId2: String) -> String {
         [userId1, userId2].sorted().joined(separator: "_")
     }

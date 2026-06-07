@@ -9,7 +9,7 @@ struct ChatListView: View {
         NavigationStack {
             List {
                 Section("İstifadəçilər") {
-                    ForEach(chatViewModel.users) { user in
+                    ForEach(chatViewModel.filteredUsers) { user in
                         NavigationLink {
                             ChatView(viewModel: chatViewModel, receiver: user)
                         } label: {
@@ -19,6 +19,7 @@ struct ChatListView: View {
                 }
             }
             .navigationTitle("EchoChat")
+            .searchable(text: $chatViewModel.searchText, prompt: "İstifadəçi axtar...")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
